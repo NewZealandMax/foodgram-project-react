@@ -3,34 +3,40 @@ name: Foodgram workflow
 on: [push]
 
 jobs:
+  
   #tests:
   #  runs-on: ubuntu-latest
-
   #  steps:
+
   #    - uses: actions/checkout@v2
-     
+      
   #    - name: Set up Python
   #      uses: actions/setup-python@v2
   #      with:
   #        python-version: 3.7
-      
+
   #    - name: Install dependencies
   #      run: |
-  #        python -m pip install  --upgrade pip
+  #        python -m pip install --upgrade pip
   #        pip install flake8 pep8-naming flake8-broken-line flake8-return flake8-isort
-  #        pip install -r requirements.txt
+  #        pip install -r ./api_yamdb/requirements.txt
 
   #    - name: Test with flake8 and django tests
   #      run: |
   #        python -m flake8
-  #        cd infra_project/
+  #        cd api_yamdb/
   #        python manage.py test
+
+  #    - name: Test with pytest
+  #      run: |
+  #        python -m pytest
 
   build_and_push_to_docker_hub:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
-  #  needs: tests
+    needs: tests
     steps:
+
       - name: Check out the repo
         uses: actions/checkout@v2
 
@@ -45,15 +51,17 @@ jobs:
 
       - name: Push to Docker Hub
         uses: docker/build-push-action@v2
-        dockerfile: ../../backend/Dockerfile
         with:
+          context: ./backend
           push: true
-          tags: newzealand/foodram:latest
+          tags: newzealand/foodgram:latest
 
   deploy:
     runs-on: ubuntu-latest
     needs: build_and_push_to_docker_hub
+    if: github.ref == 'refs/heads/master'
     steps:
+
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
@@ -62,9 +70,16 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
-            sudo docker pull newzealand/foodgram:latest
-            sudo docker stop $(sudo docker ps -a -q)
-            sudo docker run --rm -d -p 5000:5000 newzealand/foodgram:latest
+            sudo docker-compose stop
+            sudo docker-compose rm web
+            touch .env
+            echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
+            echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+            echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+            echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+            echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+            echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+            sudo docker-compose up -d
 
   send_message:
     runs-on: ubuntu-latest
@@ -76,4 +91,3 @@ jobs:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: ${{ github.workflow }} успешно выполнен!
-
