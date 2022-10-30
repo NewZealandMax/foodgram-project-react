@@ -32,7 +32,7 @@ jobs:
   #        python -m pytest
 
   build_backend_and_push_to_docker_hub:
-    name: Push Docker image to Docker Hub
+    name: Push Backend image to Docker Hub
     runs-on: ubuntu-latest
     #needs: tests
     steps:
@@ -57,7 +57,7 @@ jobs:
           tags: newzealand/foodgram:latest
 
   build_frontend_and_push_to_docker_hub:
-    name: Push Docker image to Docker Hub
+    name: Push Frontend image to Docker Hub
     runs-on: ubuntu-latest
     needs: build_backend_and_push_to_docker_hub
     steps:
