@@ -8,7 +8,7 @@ services:
     env_file:
       - ./.env
 
-  web:
+  backend:
     image: newzealand/foodgram:latest
     restart: always
     volumes:
@@ -20,13 +20,11 @@ services:
       - ./.env
 
   frontend:
-    build:
-      context: ../frontend/
-      dockerfile: Dockerfile
+    image: newzealand/frontend:latest
     volumes:
-      - ../frontend/:/app/result_build/
+      - frontend/:/app/result_build/
     depends_on:
-      - web
+      - backend
 
   nginx:
     image: nginx:1.19.3
@@ -44,4 +42,4 @@ services:
 volumes:
   static_value:
   media_value:
-  
+  frontend:
