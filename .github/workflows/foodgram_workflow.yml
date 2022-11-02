@@ -96,7 +96,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             cd ~/foodgram-project-react/
-            sudo git pull 
+            git pull 
             sudo ./infra/docker-compose stop
             sudo ./infra/docker-compose rm backend
             sudo ./infra/docker-compose rm frontend
