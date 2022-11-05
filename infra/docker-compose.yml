@@ -2,6 +2,7 @@ version: '3.8'
 services:
 
   db:
+    container_name: database
     image: postgres:13.0-alpine
     volumes:
       - db_volume:/var/lib/postgresql/data/
@@ -9,6 +10,7 @@ services:
       - ./.env
 
   backend:
+    container_name: backend
     image: newzealand/foodgram:latest
     restart: always
     volumes:
@@ -20,6 +22,7 @@ services:
       - ./.env
 
   frontend:
+    container_name: frontend
     image: newzealand/frontend:latest
     volumes:
       - frontend/:/app/result_build/
@@ -27,6 +30,7 @@ services:
       - backend
 
   nginx:
+    container_name: foodgram_nginx
     image: nginx:1.19.3
     ports:
       - "80:80"
