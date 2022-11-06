@@ -12,6 +12,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '62.84.123.45',
+    'backend:8000'
     'host.docker.internal',
     'localhost',
 ]
