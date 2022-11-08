@@ -46,6 +46,7 @@ class Recipe(models.Model):
         verbose_name='Название блюда'
     )
     image = models.ImageField(
+        max_length=200,
         upload_to='recipes/images/',
         verbose_name='Вид сервировки'
     )
