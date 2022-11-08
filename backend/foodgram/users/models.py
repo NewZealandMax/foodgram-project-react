@@ -13,7 +13,7 @@ class FoodgramUser(AbstractUser):
         max_length=150,
         validators=[RegexValidator(r'^[\w.@+-]+$')],
         unique=True,
-        verbose_name='Псевдоним'
+        verbose_name='Логин'
     )
     first_name = models.CharField(
         max_length=150,
