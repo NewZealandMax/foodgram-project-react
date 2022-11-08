@@ -106,7 +106,7 @@ jobs:
             echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> /home/newzealand/foodgram-project-react/infra/.env
             echo DB_HOST=${{ secrets.DB_HOST }} >> /home/newzealand/foodgram-project-react/infra/.env
             echo DB_PORT=${{ secrets.DB_PORT }} >> /home/newzealand/foodgram-project-react/infra/.env
-            sudo docker-compose -f /home/newzealand/foodgram-project-react/infra/docker-compose.yml up -d
+            sudo docker-compose -f /home/newzealand/foodgram-project-react/infra/docker-compose.yml up -d --build
 
   send_message:
     runs-on: ubuntu-latest
