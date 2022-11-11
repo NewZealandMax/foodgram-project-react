@@ -11,7 +11,7 @@ SECRET_KEY = 'j2wwwf(l&_h=%4+a1vv5zt%y!vut7_8)uz+tcvp=j5wq29s@*m'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '158.160.14.223',
+    '51.250.108.52',
     'backend:8000'
     'host.docker.internal',
     'localhost',
