@@ -153,7 +153,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSubscribedSerializer
-    permission_classes = [UserPermission]
+    #permission_classes = [UserPermission]
 
     def get_serializer_class(self):
         if self.action == 'create':
