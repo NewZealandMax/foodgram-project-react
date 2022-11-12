@@ -110,9 +110,9 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'users.FoodgramUser'
 
-STATIC_URL = '/static_backend/'
+STATIC_URL = '/static/'
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static_backend')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
 
