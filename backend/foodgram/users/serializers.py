@@ -8,7 +8,7 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-
+    """Сериализатор формы регистрации пользователя"""
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name')
@@ -22,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribedSerializer(UserSerializer):
+    """Сериализатор сведений о пользователе"""
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
@@ -35,6 +36,7 @@ class UserSubscribedSerializer(UserSerializer):
         ).exists()
 
 class UserSetPasswordSerializer(UserSerializer):
+    """Сериализатор формы смены пароля"""
     current_password = serializers.CharField()
     new_password = serializers.CharField()
 

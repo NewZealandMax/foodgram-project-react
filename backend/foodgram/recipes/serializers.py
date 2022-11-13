@@ -14,7 +14,7 @@ User = get_user_model()
 
 
 class TagSerializer(serializers.ModelSerializer):
-    
+    """Сериализатор для тегов"""
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
@@ -25,7 +25,7 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-
+    """Сериализатор для ингредиентов"""
     class Meta:
         model = Ingredient
         fields = ('id', 'name', 'measurement_unit')
@@ -42,6 +42,7 @@ class Base64ImageField(serializers.ImageField):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор для рецепта"""
     author = UserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -170,7 +171,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         ).exists()
 
 class FavouriteCartRecipeSerializer(serializers.ModelSerializer):
-    """Добавление и удаление избранных рецептов и корзины"""
+    """Сериализатор избранных рецептов и корзины"""
 
     class Meta(RecipeSerializer.Meta):
         fields = ('id', 'name', 'image', 'cooking_time')
@@ -194,9 +195,6 @@ class FavouriteRecipeSerializer(FavouriteCartRecipeSerializer):
         recipe = validated_data['recipe']
         Favourite.objects.create(user=user, recipe=recipe)
         return recipe
-
-    def destroy(self, instance, validated_data):
-        print(instance)
 
 
 class CartRecipeSerializer(FavouriteCartRecipeSerializer):

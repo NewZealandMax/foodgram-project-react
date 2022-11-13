@@ -30,8 +30,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
+    filter_backends = (filters.OrderingFilter, filters.SearchFilter)
+    search_fields = ('^name',)
+    ordering_fields = ('name',)
+    ordering = ('name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -39,23 +41,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     #permission_classes = (RecipePermission,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('author',)
+    filterset_fields = ('author',) #'is_favorited', 'is_in_shopping_cart', 'tags')
 
     def get_queryset(self):
-        print('Получаю список рецептов')
         queryset = Recipe.objects.all()
-        is_favorited = self.request.query_params.get('is_favorited')
-        if is_favorited is not None:
-            favourite = Favourite.objects.filter(user=self.request.user)
-            queryset = Recipe.objects.filter(users__in=favourite)
-        is_in_shopping_cart = self.request.query_params.get('is_in_shopping_cart')
-        if is_in_shopping_cart is not None:
-            shopping_cart = Cart.objects.filter(user=self.request.user)
-            queryset = Recipe.objects.filter(consumers__in=shopping_cart)
-        tags = self.request.query_params.getlist('tags')
-        if tags is not None:
-            queryset = Recipe.objects.filter(tags__slug__in=tags).distinct()
-        print(queryset)
+        #is_favorited = self.request.query_params.get('is_favorited')
+        #if is_favorited is not None:
+        #    favourite = Favourite.objects.filter(user=self.request.user)
+        #    queryset = Recipe.objects.filter(users__in=favourite)
+        #is_in_shopping_cart = self.request.query_params.get('is_in_shopping_cart')
+        #if is_in_shopping_cart is not None:
+        #    shopping_cart = Cart.objects.filter(user=self.request.user)
+        #    queryset = Recipe.objects.filter(consumers__in=shopping_cart)
+        #tags = self.request.query_params.getlist('tags')
+        #if tags is not None:
+        #    queryset = Recipe.objects.filter(tags__slug__in=tags).distinct()
         return queryset
 
     def perform_create(self, serializer):
@@ -72,7 +72,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['POST', 'DELETE'], detail=True,
             permission_classes=[IsAuthenticated])
     def favorite(self, request, *args, **kwargs):
-        print(self.permission_classes)
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         method = request.parser_context['request'].method
         if method == 'POST':
@@ -163,12 +162,12 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_object(self):
         user = self.request.user
         pk = self.kwargs['pk']
-        if user.is_authenticated:
-            if pk == 'me':
+        if pk == 'me':
+            if user.is_authenticated:
                 return get_object_or_404(User, pk=user.pk)
             else:
-                return get_object_or_404(User, pk=pk)
-        raise NotAuthenticated
+                raise NotAuthenticated
+        return get_object_or_404(User, pk=pk)
 
     @action(methods=['POST'], detail=False,
             permission_classes=[IsAuthenticated], serializer_class=UserSetPasswordSerializer)
