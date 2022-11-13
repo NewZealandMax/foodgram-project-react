@@ -96,9 +96,10 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             sudo nginx -s stop
-            sudo docker-compose -f /home/newzealand/foodgram-project-react/infra/docker-compose.yml stop
-            sudo docker-compose -f /home/newzealand/foodgram-project-react/infra/docker-compose.yml rm backend
-            sudo docker-compose -f /home/newzealand/foodgram-project-react/infra/docker-compose.yml rm frontend
+            sudo docker-compose -f /home/newzealand/foodgram-project-react/infra/docker-compose.yml down
+            sudo docker container stop foodgram_database foodgram_backend foodgram_frontend foodgram_nginx
+            sudo docker system prune -af
+            sudo docker volume prune -f
             touch /home/newzealand/foodgram-project-react/infra/.env
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> /home/newzealand/foodgram-project-react/infra/.env
             echo DB_NAME=${{ secrets.DB_NAME }} >> /home/newzealand/foodgram-project-react/infra/.env
@@ -107,6 +108,9 @@ jobs:
             echo DB_HOST=${{ secrets.DB_HOST }} >> /home/newzealand/foodgram-project-react/infra/.env
             echo DB_PORT=${{ secrets.DB_PORT }} >> /home/newzealand/foodgram-project-react/infra/.env
             sudo docker-compose -f /home/newzealand/foodgram-project-react/infra/docker-compose.yml up -d --build
+            sudo docker exec foodgram_backend python manage.py makemigrations
+            sudo docker exec foodgram_backend python manage.py migrate
+            sudo docker exec foodgram_backend python manage.py collectstatic --no-input
 
   send_message:
     runs-on: ubuntu-latest
