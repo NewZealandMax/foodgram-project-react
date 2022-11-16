@@ -43,7 +43,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #permission_classes = (RecipePermission,)
     filter_backends = (DjangoFilterBackend,)
     #filterset_class = RecipeFilter
-    filterset_fields = ('author', 'tags') #'is_favorited', 'is_in_shopping_cart', 'tags')
+    filterset_fields = ('author',) #'is_favorited', 'is_in_shopping_cart', 'tags')
 
     def get_queryset(self):
         queryset = Recipe.objects.all()
@@ -52,6 +52,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             queryset = Recipe.objects.filter(users__user=user)
         if self.request.query_params.get('is_in_shopping_cart'):
             queryset = Recipe.objects.filter(consumers__user=user)
+        tags = self.request.query_params.getlist('tags')
+        if tags is not None:
+            queryset = Recipe.objects.filter(tags__slug__in=tags).distinct()
         return queryset
 
     def perform_create(self, serializer):
@@ -143,6 +146,7 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
+    lookup_field = 'slug'
 
 
 class UserViewSet(viewsets.ModelViewSet):

@@ -171,21 +171,21 @@ class RecipeSerializer(serializers.ModelSerializer):
         ).exists()
 
 class FavouriteCartRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор избранных рецептов и корзины"""
+    """Сериализатор полей избранных рецептов и корзины"""
 
     class Meta(RecipeSerializer.Meta):
         fields = ('id', 'name', 'image', 'cooking_time')
         read_only_fields = ('id', 'name', 'image', 'cooking_time')
 
-    def validate(self, data):
-        user = self.context['request'].user
-        pk = self.context['request'].parser_context['kwargs']['pk']
-        recipe = get_object_or_404(Recipe, pk=pk)
-        if Favourite.objects.filter(user=user, recipe=recipe).exists():
-            raise serializers.ValidationError({'error': 'Рецепт уже добавлен в избранное'})
-        if Cart.objects.filter(user=user, recipe=recipe).exists():
-            raise serializers.ValidationError({'error': 'Рецепт уже в корзине'})
-        return data
+    #def validate(self, data):
+    #    user = self.context['request'].user
+    #    pk = self.context['request'].parser_context['kwargs']['pk']
+    #    recipe = get_object_or_404(Recipe, pk=pk)
+    #    if Favourite.objects.filter(user=user, recipe=recipe).exists():
+    #        raise serializers.ValidationError({'error': 'Рецепт уже добавлен в избранное'})
+    #    if Cart.objects.filter(user=user, recipe=recipe).exists():
+    #        raise serializers.ValidationError({'error': 'Рецепт уже в корзине'})
+    #    return data
 
 
 class FavouriteRecipeSerializer(FavouriteCartRecipeSerializer):
@@ -196,6 +196,14 @@ class FavouriteRecipeSerializer(FavouriteCartRecipeSerializer):
         Favourite.objects.create(user=user, recipe=recipe)
         return recipe
 
+    def validate(self, data):
+        user = self.context['request'].user
+        pk = self.context['request'].parser_context['kwargs']['pk']
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if Favourite.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError({'error': 'Рецепт уже добавлен в избранное'})
+        return data
+
 
 class CartRecipeSerializer(FavouriteCartRecipeSerializer):
 
@@ -204,6 +212,14 @@ class CartRecipeSerializer(FavouriteCartRecipeSerializer):
         recipe = validated_data['recipe']
         Cart.objects.create(user=user, recipe=recipe)
         return recipe
+    
+    def validate(self, data):
+        user = self.context['request'].user
+        pk = self.context['request'].parser_context['kwargs']['pk']
+        recipe = get_object_or_404(Recipe, pk=pk)
+        if Cart.objects.filter(user=user, recipe=recipe).exists():
+            raise serializers.ValidationError({'error': 'Рецепт уже в корзине'})
+        return data
 
 
 class FollowSerializer(serializers.ModelSerializer):
