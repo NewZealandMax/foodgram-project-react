@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.response import Response
 
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, UserSubscribedSerializer
 from .models import Cart, Favourite, Follow, Ingredient, Recipe, RecipeIngredient, Tag
 
 
@@ -43,7 +43,7 @@ class Base64ImageField(serializers.ImageField):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для рецепта"""
-    author = UserSerializer(read_only=True)
+    author = UserSubscribedSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     image = Base64ImageField()
