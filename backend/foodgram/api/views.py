@@ -32,10 +32,18 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter,)
-    search_fields = ('^name',)
-    ordering_fields = ('name',)
-    ordering = ('name',)
+    #filter_backends = (DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter,)
+    #search_fields = ('^name',)
+    #ordering_fields = ('name',)
+    #ordering = ('name',)
+    #filterset_fields = ('name',)
+
+    def get_queryset(self):
+        queryset = Ingredient.objects.all()
+        name = self.request.query_params.get('name')
+        if name:
+            queryset = Ingredient.objects.filter(name__contains=name)
+        return queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -50,12 +58,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         queryset = Recipe.objects.all()
         user = self.request.user
         if self.request.query_params.get('is_favorited'):
-            queryset = Recipe.objects.filter(users__user=user)
-        if self.request.query_params.get('is_in_shopping_cart'):
-            queryset = Recipe.objects.filter(consumers__user=user)
+            queryset = queryset.filter(users__user=user)
+        elif self.request.query_params.get('is_in_shopping_cart'):
+            queryset = queryset.filter(consumers__user=user)
         tags = self.request.query_params.getlist('tags')
         if tags:
-            queryset = Recipe.objects.filter(tags__slug__in=tags).distinct()
+            queryset = queryset.filter(tags__slug__in=tags).distinct()
         return queryset
 
     def perform_create(self, serializer):
