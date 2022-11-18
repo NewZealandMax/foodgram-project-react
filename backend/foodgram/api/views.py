@@ -16,7 +16,8 @@ from rest_framework.response import Response
 from recipes.filters import RecipeFilter
 from recipes.models import (Cart, Favourite, Follow, Ingredient,
                             Recipe, RecipeIngredient, Tag)
-from recipes.serializers import (FavouriteCartRecipeSerializer,
+from recipes.serializers import (CartRecipeSerializer,FavouriteCartRecipeSerializer,
+                                 FavouriteRecipeSerializer,
                                  FollowSerializer, IngredientSerializer,
                                  RecipeSerializer, TagSerializer)
 from users.serializers import (UserSerializer, UserSetPasswordSerializer,
@@ -31,7 +32,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    filter_backends = (filters.OrderingFilter, filters.SearchFilter)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter,)
     search_fields = ('^name',)
     ordering_fields = ('name',)
     ordering = ('name',)
@@ -74,7 +75,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         method = request.parser_context['request'].method
         if method == 'POST':
-            serializer = FavouriteCartRecipeSerializer(
+            serializer = FavouriteRecipeSerializer(
                 recipe,
                 data=request.data,
                 context={'request': request}
@@ -96,7 +97,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         method = request.parser_context['request'].method
         if method == 'POST':
-            serializer = FavouriteCartRecipeSerializer(
+            serializer = CartRecipeSerializer(
                 recipe,
                 data=request.data,
                 context={'request': request}

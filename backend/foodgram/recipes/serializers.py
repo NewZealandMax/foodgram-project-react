@@ -160,13 +160,13 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         return Favourite.objects.filter(
-            user=obj.author,
+            user=self.context['request'].user,
             recipe=obj,
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
         return Cart.objects.filter(
-            user=obj.author,
+            user=self.context['request'].user,
             recipe=obj
         ).exists()
 
