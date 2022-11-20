@@ -14,7 +14,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('email', 'id', 'username', 'first_name', 'last_name')
 
     def create(self, validated_data):
-        """Хешируем пароль при создании пользователя"""
+        """Хеширует пароль при создании пользователя"""
         user = User.objects.create_user(**validated_data)
         user.set_password(self.initial_data['password'])
         user.save()

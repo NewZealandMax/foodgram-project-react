@@ -7,52 +7,46 @@ from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
-from rest_framework import filters, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from recipes.filters import RecipeFilter
 from recipes.models import (Cart, Favourite, Follow, Ingredient,
                             Recipe, RecipeIngredient, Tag)
-from recipes.serializers import (CartRecipeSerializer,FavouriteCartRecipeSerializer,
-                                 FavouriteRecipeSerializer,
+from recipes.serializers import (CartRecipeSerializer, FavouriteRecipeSerializer,
                                  FollowSerializer, IngredientSerializer,
                                  RecipeSerializer, TagSerializer)
 from users.serializers import (UserSerializer, UserSetPasswordSerializer,
                                UserSubscribedSerializer)
-from .permissions import RecipePermission, UserPermission
+from .permissions import RecipePermission
 
 
 User = get_user_model()
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    """Viewset для ингредиентов"""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    #filter_backends = (DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter,)
-    #search_fields = ('^name',)
-    #ordering_fields = ('name',)
-    #ordering = ('name',)
-    #filterset_fields = ('name',)
 
     def get_queryset(self):
         queryset = Ingredient.objects.all()
         name = self.request.query_params.get('name')
         if name:
-            queryset = Ingredient.objects.filter(name__contains=name)
+            queryset = queryset.filter(name__istartswith=name)
         return queryset
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
+    """Viewset для рецептов"""
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = (RecipePermission,)
     filter_backends = (DjangoFilterBackend,)
-    #filterset_class = RecipeFilter
-    filterset_fields = ('author',) #'is_favorited', 'is_in_shopping_cart', 'tags')
+    filterset_fields = ('author',)
 
     def get_queryset(self):
         queryset = Recipe.objects.all()
@@ -80,6 +74,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['POST', 'DELETE'], detail=True,
             permission_classes=[IsAuthenticated])
     def favorite(self, request, *args, **kwargs):
+        """Добавляет и удаляет избранное"""
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         method = request.parser_context['request'].method
         if method == 'POST':
@@ -102,6 +97,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(methods=['POST', 'DELETE'], detail=True, permission_classes=[IsAuthenticated])
     def shopping_cart(self, request, *args, **kwargs):
+        """Добавляет и удаляет покупки"""
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         method = request.parser_context['request'].method
         if method == 'POST':
@@ -152,15 +148,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    """Viewset для тегов"""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Viewset для пользователей"""
     queryset = User.objects.all()
     serializer_class = UserSubscribedSerializer
-    #permission_classes = [UserPermission]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -180,6 +177,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False,
             permission_classes=[IsAuthenticated], serializer_class=UserSetPasswordSerializer)
     def set_password(self, request, *args, **kwargs):
+        """Изменяет пароль"""
         serializer = UserSetPasswordSerializer(User, request.data, context={'request': request})
         if serializer.is_valid():
             user = request.user
@@ -190,6 +188,7 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
     def subscriptions(self, request, *args, **kwargs):
+        """Возвращает подписки"""
         user = request.user
         queryset = User.objects.filter(followers__follower=user)
         page = self.paginate_queryset(queryset)
@@ -202,6 +201,7 @@ class UserViewSet(viewsets.ModelViewSet):
     
     @action(methods=['POST', 'DELETE'], detail=True, permission_classes=[IsAuthenticated])
     def subscribe(self, request, *args, **kwargs):
+        """Добавляет и удаляет подписки"""
         following = get_object_or_404(User, pk=kwargs['pk'])
         method = request.parser_context['request'].method
         if method == 'POST':

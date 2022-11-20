@@ -1,12 +1,11 @@
-from base64 import b64decode, b64encode
+from base64 import b64decode
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers, status
-from rest_framework.response import Response
+from rest_framework import serializers
 
-from users.serializers import UserSerializer, UserSubscribedSerializer
+from users.serializers import UserSubscribedSerializer
 from .models import Cart, Favourite, Follow, Ingredient, Recipe, RecipeIngredient, Tag
 
 
@@ -42,7 +41,7 @@ class Base64ImageField(serializers.ImageField):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для рецепта"""
+    """Сериализатор для рецептов"""
     author = UserSubscribedSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
@@ -171,25 +170,15 @@ class RecipeSerializer(serializers.ModelSerializer):
         ).exists()
 
 class FavouriteCartRecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор полей избранных рецептов и корзины"""
+    """Сериализатор полей избранных рецептов и покупок"""
 
     class Meta(RecipeSerializer.Meta):
         fields = ('id', 'name', 'image', 'cooking_time')
         read_only_fields = ('id', 'name', 'image', 'cooking_time')
 
-    #def validate(self, data):
-    #    user = self.context['request'].user
-    #    pk = self.context['request'].parser_context['kwargs']['pk']
-    #    recipe = get_object_or_404(Recipe, pk=pk)
-    #    if Favourite.objects.filter(user=user, recipe=recipe).exists():
-    #        raise serializers.ValidationError({'error': 'Рецепт уже добавлен в избранное'})
-    #    if Cart.objects.filter(user=user, recipe=recipe).exists():
-    #        raise serializers.ValidationError({'error': 'Рецепт уже в корзине'})
-    #    return data
-
 
 class FavouriteRecipeSerializer(FavouriteCartRecipeSerializer):
-
+    """Сериализатор для избранных"""
     def create(self, validated_data):
         user = validated_data['user']
         recipe = validated_data['recipe']
@@ -206,7 +195,7 @@ class FavouriteRecipeSerializer(FavouriteCartRecipeSerializer):
 
 
 class CartRecipeSerializer(FavouriteCartRecipeSerializer):
-
+    """Сериализатор для покупок"""
     def create(self, validated_data):
         user = validated_data['user']
         recipe = validated_data['recipe']
@@ -223,6 +212,7 @@ class CartRecipeSerializer(FavouriteCartRecipeSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    """Сериализатор для подписок"""
     recipes = FavouriteCartRecipeSerializer(many=True, read_only=True)
     is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()

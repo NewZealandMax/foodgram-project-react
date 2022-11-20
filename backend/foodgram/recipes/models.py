@@ -72,8 +72,11 @@ class Recipe(models.Model):
         verbose_name='Дата публикации'
     )
 
+    def __str__(self):
+        return self.name
+
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ['-pub_date']   
 
 
 class RecipeIngredient(models.Model):
