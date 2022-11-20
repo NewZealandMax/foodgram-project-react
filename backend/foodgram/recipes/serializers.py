@@ -3,9 +3,9 @@ from base64 import b64decode
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers
 from recipes.models import (Cart, Favourite, Follow,
                             Ingredient, Recipe, RecipeIngredient, Tag)
+from rest_framework import serializers
 from users.serializers import UserSubscribedSerializer
 
 User = get_user_model()

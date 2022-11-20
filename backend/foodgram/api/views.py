@@ -1,15 +1,16 @@
 import io
 
+from api.permissions import RecipePermission
 from django.contrib.auth import get_user_model
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from recipes.models import (Cart, Favourite, Follow, Ingredient,
                             Recipe, RecipeIngredient, Tag)
-from recipes.serializers import (CartRecipeSerializer,
+from recipes.serializers import (TagSerializer, IngredientSerializer,
+                                 RecipeSerializer,
                                  FavouriteRecipeSerializer,
-                                 FollowSerializer, IngredientSerializer,
-                                 RecipeSerializer, TagSerializer)
+                                 CartRecipeSerializer, FollowSerializer)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -18,7 +19,6 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from api.permissions import RecipePermission
 from users.serializers import (UserSerializer, UserSetPasswordSerializer,
                                UserSubscribedSerializer)
 
@@ -64,14 +64,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         super().perform_create(serializer)
-        return
+        return None
 
     def perform_update(self, serializer):
         if not serializer.is_valid():
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         super().perform_update(serializer)
-        return
+        return None
 
     @action(methods=['POST', 'DELETE'], detail=True,
             permission_classes=[IsAuthenticated])
