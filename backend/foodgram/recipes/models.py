@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
 
-
 User = get_user_model()
 
 
@@ -76,7 +75,7 @@ class Recipe(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['-pub_date']   
+        ordering = ['-pub_date']
 
 
 class RecipeIngredient(models.Model):

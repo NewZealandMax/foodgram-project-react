@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from .models import Cart, Favourite, Follow, Ingredient, Recipe, Tag
 
 
@@ -12,7 +11,7 @@ class IngredientAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author', 'favorites')
     list_filter = ('author', 'name', 'tags__name')
-    
+
     def favorites(self, obj):
         return len(obj.users.all())
 

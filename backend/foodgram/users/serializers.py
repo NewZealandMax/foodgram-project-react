@@ -1,8 +1,6 @@
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
-
 from recipes.models import Follow
-
 
 User = get_user_model()
 
@@ -35,6 +33,7 @@ class UserSubscribedSerializer(UserSerializer):
             following=obj
         ).exists()
 
+
 class UserSetPasswordSerializer(UserSerializer):
     """Сериализатор формы смены пароля"""
     current_password = serializers.CharField()
@@ -50,5 +49,6 @@ class UserSetPasswordSerializer(UserSerializer):
         password = data['current_password']
         user = authenticate(request, username=username, password=password)
         if user is None:
-            raise serializers.ValidationError({'error': 'Неверный пароль пользователя'})
+            raise serializers.ValidationError(
+                {'error': 'Неверный пароль пользователя'})
         return data
