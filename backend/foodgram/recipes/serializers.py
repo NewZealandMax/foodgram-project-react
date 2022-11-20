@@ -4,11 +4,9 @@ from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-
+from recipes.models import (Cart, Favourite, Follow,
+                            Ingredient, Recipe, RecipeIngredient, Tag)
 from users.serializers import UserSubscribedSerializer
-from .models import (Cart, Favourite, Follow, 
-                     Ingredient, Recipe, RecipeIngredient, Tag)
-
 
 User = get_user_model()
 
@@ -20,8 +18,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'color', 'slug')
 
     def validate_color(self, value):
-        value = value.upper()
-        return value
+        return value.upper()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -254,7 +251,9 @@ class FollowSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if self.context['request'].method == 'POST':
             follower = self.context['request'].user
-            following_pk = self.context['request'].parser_context['kwargs'].get('pk')
+            following_pk = self.context[
+                'request'
+            ].parser_context['kwargs'].get('pk')
             following = get_object_or_404(User, pk=following_pk)
             if follower == following:
                 raise serializers.ValidationError(

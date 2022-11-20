@@ -4,6 +4,12 @@ from django.contrib.auth import get_user_model
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from recipes.models import (Cart, Favourite, Follow, Ingredient,
+                            Recipe, RecipeIngredient, Tag)
+from recipes.serializers import (CartRecipeSerializer,
+                                 FavouriteRecipeSerializer,
+                                 FollowSerializer, IngredientSerializer,
+                                 RecipeSerializer, TagSerializer)
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -13,15 +19,8 @@ from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from api.permissions import RecipePermission
-from recipes.models import (Cart, Favourite, Follow, Ingredient,
-                            Recipe, RecipeIngredient, Tag)
-from recipes.serializers import (CartRecipeSerializer, 
-                                 FavouriteRecipeSerializer,
-                                 FollowSerializer, IngredientSerializer,
-                                 RecipeSerializer, TagSerializer)
 from users.serializers import (UserSerializer, UserSetPasswordSerializer,
                                UserSubscribedSerializer)
-
 
 User = get_user_model()
 
@@ -33,11 +32,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
     def get_queryset(self):
-        queryset = Ingredient.objects.all()
         name = self.request.query_params.get('name')
         if name:
-            queryset = queryset.filter(name__istartswith=name)
-        return queryset
+            return Ingredient.objects.filter(name__istartswith=name)
+        return Ingredient.objects.all()
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -66,12 +64,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         super().perform_create(serializer)
+        return
 
     def perform_update(self, serializer):
         if not serializer.is_valid():
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         super().perform_update(serializer)
+        return
 
     @action(methods=['POST', 'DELETE'], detail=True,
             permission_classes=[IsAuthenticated])
@@ -91,13 +91,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     serializer.data, status=status.HTTP_201_CREATED)
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            get_object_or_404(
-                Favourite,
-                user=request.user,
-                recipe=recipe
-            ).delete()
-            return Response({}, status=status.HTTP_204_NO_CONTENT)
+        get_object_or_404(
+            Favourite,
+            user=request.user,
+            recipe=recipe
+        ).delete()
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['POST', 'DELETE'],
             detail=True, permission_classes=[IsAuthenticated])
@@ -117,15 +116,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     serializer.data, status=status.HTTP_201_CREATED)
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            get_object_or_404(
-                Cart,
-                user=request.user,
-                recipe=recipe
-            ).delete()
-            return Response({}, status=status.HTTP_204_NO_CONTENT)
+        get_object_or_404(
+            Cart,
+            user=request.user,
+            recipe=recipe
+        ).delete()
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
-    @action(methods=['GET'], detail=False, permission_classes=[IsAuthenticated])
+    @action(methods=['GET'], detail=False,
+            permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request, *args, **kwargs):
         """Формирует pdf-файл со списком покупок"""
         buffer = io.BytesIO()
@@ -179,8 +178,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if pk == 'me':
             if user.is_authenticated:
                 return get_object_or_404(User, pk=user.pk)
-            else:
-                raise NotAuthenticated
+            raise NotAuthenticated
         return get_object_or_404(User, pk=pk)
 
     @action(methods=['POST'], detail=False,
@@ -233,10 +231,9 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
-        else:
-            get_object_or_404(
-                Follow,
-                follower=request.user,
-                following=following
-            ).delete()
-            return Response({}, status=status.HTTP_204_NO_CONTENT)
+        get_object_or_404(
+            Follow,
+            follower=request.user,
+            following=following
+        ).delete()
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
