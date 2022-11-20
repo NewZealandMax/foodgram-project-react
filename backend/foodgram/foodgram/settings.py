@@ -67,7 +67,7 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 
+        'ENGINE': os.getenv('DB_ENGINE',
                             default='django.db.backends.postgresql'),
         'NAME': os.getenv('DB_NAME', default='postgres'),
         'USER': os.getenv('POSTGRES_USER', default='postgres'),
@@ -87,7 +87,7 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': ('django.contrib.auth.password_validation.'
-                'UserAttributeSimilarityValidator'),
+                 'UserAttributeSimilarityValidator'),
     },
     {
         'NAME': ('django.contrib.auth.password_validation.'
@@ -95,7 +95,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': ('django.contrib.auth.password_validation.'
-                'CommonPasswordValidator'),
+                 'CommonPasswordValidator'),
     },
     {
         'NAME': ('django.contrib.auth.password_validation.'

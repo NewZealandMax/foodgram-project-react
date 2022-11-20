@@ -6,7 +6,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from users.serializers import UserSubscribedSerializer
-from .models import Cart, Favourite, Follow, Ingredient, Recipe, RecipeIngredient, Tag
+from .models import (Cart, Favourite, Follow, 
+                     Ingredient, Recipe, RecipeIngredient, Tag)
 
 
 User = get_user_model()
@@ -17,7 +18,7 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
-    
+
     def validate_color(self, value):
         value = value.upper()
         return value
@@ -48,15 +49,15 @@ class RecipeSerializer(serializers.ModelSerializer):
     image = Base64ImageField()
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-        
+
     class Meta:
         model = Recipe
         fields = (
             'id',
-            'tags', 
+            'tags',
             'author',
             'ingredients',
-            'is_favorited', 
+            'is_favorited',
             'is_in_shopping_cart',
             'name',
             'image',
@@ -76,8 +77,8 @@ class RecipeSerializer(serializers.ModelSerializer):
             for tag in tags:
                 if not isinstance(tag, int):
                     raise serializers.ValidationError(
-                    {'error': 'Введите id тэгов'}
-                )
+                        {'error': 'Введите id тэгов'}
+                    )
         if 'ingredients' in raw_data:
             ingredients = raw_data['ingredients']
             if not isinstance(ingredients, list):
@@ -85,18 +86,23 @@ class RecipeSerializer(serializers.ModelSerializer):
                     {'error': 'Ингредиенты должны быть в виде списка'}
                 )
             for unit in ingredients:
-                if not (isinstance(unit, dict) and 'id' in unit and 'amount' in unit):
+                if not (isinstance(unit, dict) and
+                        'id' in unit and 'amount' in unit):
                     raise serializers.ValidationError(
-                        {'error': 'Ингредиент должен быть словарём с ключами "id" и "amount"'}
+                        {'error': ('Ингредиент должен быть '
+                                   'словарём с ключами "id" и "amount"')}
                     )
                 amount = int(unit['amount'])
                 if amount < 1:
                     raise serializers.ValidationError(
-                        {'error': 'Количество ингредиента должно быть положительным числом'}
+                        {'error': ('Количество ингредиента должно '
+                                   'быть положительным числом')}
                     )
         if 'cooking_time' in raw_data and not raw_data['cooking_time']:
             raise serializers.ValidationError(
-                {'error': 'Время приготовления должно быть положительным числом'}
+                {
+                    'error': ('Время приготовления должно '
+                              'быть положительным числом')}
             )
         return data
 
@@ -169,6 +175,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             recipe=obj
         ).exists()
 
+
 class FavouriteCartRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор полей избранных рецептов и покупок"""
 
@@ -190,7 +197,9 @@ class FavouriteRecipeSerializer(FavouriteCartRecipeSerializer):
         pk = self.context['request'].parser_context['kwargs']['pk']
         recipe = get_object_or_404(Recipe, pk=pk)
         if Favourite.objects.filter(user=user, recipe=recipe).exists():
-            raise serializers.ValidationError({'error': 'Рецепт уже добавлен в избранное'})
+            raise serializers.ValidationError(
+                {'error': 'Рецепт уже добавлен в избранное'}
+            )
         return data
 
 
@@ -201,13 +210,15 @@ class CartRecipeSerializer(FavouriteCartRecipeSerializer):
         recipe = validated_data['recipe']
         Cart.objects.create(user=user, recipe=recipe)
         return recipe
-    
+
     def validate(self, data):
         user = self.context['request'].user
         pk = self.context['request'].parser_context['kwargs']['pk']
         recipe = get_object_or_404(Recipe, pk=pk)
         if Cart.objects.filter(user=user, recipe=recipe).exists():
-            raise serializers.ValidationError({'error': 'Рецепт уже в корзине'})
+            raise serializers.ValidationError(
+                {'error': 'Рецепт уже в корзине'}
+            )
         return data
 
 
@@ -216,7 +227,7 @@ class FollowSerializer(serializers.ModelSerializer):
     recipes = FavouriteCartRecipeSerializer(many=True, read_only=True)
     is_subscribed = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = User
         fields = (
@@ -246,9 +257,15 @@ class FollowSerializer(serializers.ModelSerializer):
             following_pk = self.context['request'].parser_context['kwargs'].get('pk')
             following = get_object_or_404(User, pk=following_pk)
             if follower == following:
-                raise serializers.ValidationError({'error': 'Нельзя подписаться на самого себя'})
-            if Follow.objects.filter(follower=follower, following=following).exists():
-                raise serializers.ValidationError({'error': 'Вы уже подписаны на этого пользователя'})
+                raise serializers.ValidationError(
+                    {'error': 'Нельзя подписаться на самого себя'}
+                )
+            if Follow.objects.filter(
+                follower=follower, following=following
+            ).exists():
+                raise serializers.ValidationError(
+                    {'error': 'Вы уже подписаны на этого пользователя'}
+                )
         return data
 
     def get_is_subscribed(self, obj):
