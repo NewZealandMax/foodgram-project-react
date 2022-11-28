@@ -1,16 +1,10 @@
 import io
 
-from api.permissions import RecipePermission
 from django.contrib.auth import get_user_model
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (Cart, Favourite, Follow, Ingredient,
-                            Recipe, RecipeIngredient, Tag)
-from recipes.serializers import (TagSerializer, IngredientSerializer,
-                                 RecipeSerializer,
-                                 FavouriteRecipeSerializer,
-                                 CartRecipeSerializer, FollowSerializer)
+from django_filters import rest_framework as filters
+
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -19,8 +13,20 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from .filters import IngredientFilter, RecipeFilter
+from .permissions import RecipePermission
+from recipes.models import (Cart, Favourite, Follow, Ingredient,
+                            Recipe, RecipeIngredient, Tag)
+from recipes.serializers import (CartRecipeSerializer,
+                                 FavouriteRecipeSerializer,
+                                 FollowSerializer,
+                                 GetRecipeSerializer,
+                                 IngredientSerializer,
+                                 RecipeSerializer, TagSerializer)
 from users.serializers import (UserSerializer, UserSetPasswordSerializer,
                                UserSubscribedSerializer)
+
 
 User = get_user_model()
 
@@ -30,12 +36,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-
-    def get_queryset(self):
-        name = self.request.query_params.get('name')
-        if name:
-            return Ingredient.objects.filter(name__istartswith=name)
-        return Ingredient.objects.all()
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -43,85 +45,57 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = (RecipePermission,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('author',)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
-    def get_queryset(self):
-        queryset = Recipe.objects.all()
-        user = self.request.user
-        if self.request.query_params.get('is_favorited'):
-            queryset = queryset.filter(users__user=user)
-        elif self.request.query_params.get('is_in_shopping_cart'):
-            queryset = queryset.filter(consumers__user=user)
-        tags = self.request.query_params.getlist('tags')
-        if tags:
-            queryset = queryset.filter(tags__slug__in=tags).distinct()
-        return queryset
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return GetRecipeSerializer
+        return RecipeSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        super().perform_create(serializer)
-        return None
 
-    def perform_update(self, serializer):
-        if not serializer.is_valid():
+    @staticmethod
+    def add_remove_bookmark(request, model, serializer, **kwargs):
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        method = request.parser_context['request'].method
+        if method == 'POST':
+            serializer = serializer(
+                recipe,
+                data=request.data,
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            model.objects.create(user=request.user, recipe=recipe)
             return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        super().perform_update(serializer)
-        return None
+                serializer.data, status=status.HTTP_201_CREATED)
+        get_object_or_404(
+            model,
+            user=request.user,
+            recipe=recipe
+        ).delete()
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['POST', 'DELETE'], detail=True,
             permission_classes=[IsAuthenticated])
     def favorite(self, request, *args, **kwargs):
         """Добавляет и удаляет избранное"""
-        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
-        method = request.parser_context['request'].method
-        if method == 'POST':
-            serializer = FavouriteRecipeSerializer(
-                recipe,
-                data=request.data,
-                context={'request': request}
-            )
-            if serializer.is_valid():
-                Favourite.objects.create(user=request.user, recipe=recipe)
-                return Response(
-                    serializer.data, status=status.HTTP_201_CREATED)
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        get_object_or_404(
-            Favourite,
-            user=request.user,
-            recipe=recipe
-        ).delete()
-        return Response({}, status=status.HTTP_204_NO_CONTENT)
+        return self.add_remove_bookmark(request,
+                                        Favourite, 
+                                        FavouriteRecipeSerializer,
+                                        **kwargs
+               )
 
     @action(methods=['POST', 'DELETE'],
             detail=True, permission_classes=[IsAuthenticated])
     def shopping_cart(self, request, *args, **kwargs):
         """Добавляет и удаляет покупки"""
-        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
-        method = request.parser_context['request'].method
-        if method == 'POST':
-            serializer = CartRecipeSerializer(
-                recipe,
-                data=request.data,
-                context={'request': request}
-            )
-            if serializer.is_valid():
-                Cart.objects.create(user=request.user, recipe=recipe)
-                return Response(
-                    serializer.data, status=status.HTTP_201_CREATED)
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        get_object_or_404(
-            Cart,
-            user=request.user,
-            recipe=recipe
-        ).delete()
-        return Response({}, status=status.HTTP_204_NO_CONTENT)
+        return self.add_remove_bookmark(request,
+                                        Cart, 
+                                        CartRecipeSerializer,
+                                        **kwargs
+               )
 
     @action(methods=['GET'], detail=False,
             permission_classes=[IsAuthenticated])
@@ -134,14 +108,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         file.drawString(200, 800,
                         f'Список покупок пользователя {request.user.username}')
         goods = dict()
-        for cart_unit in request.user.cart.all():
-            for ingredient in cart_unit.recipe.ingredients.all():
-                amount = get_object_or_404(
-                    RecipeIngredient,
-                    recipe=cart_unit.recipe,
-                    ingredient=ingredient
-                ).amount
-                goods[ingredient.name] = goods.get(ingredient.name, 0) + amount
+        for unit in request.user.cart.values('recipe_id__ingredient'):
+            obj = get_object_or_404(
+                RecipeIngredient,
+                pk = unit['recipe_id__ingredient']
+            )
+            name = obj.ingredient.name
+            goods[name] = goods.get(name, 0) + obj.amount
         left = 50
         bottom = 750
         for good, amount in goods.items():
@@ -188,12 +161,11 @@ class UserViewSet(viewsets.ModelViewSet):
         """Изменяет пароль"""
         serializer = UserSetPasswordSerializer(
             User, request.data, context={'request': request})
-        if serializer.is_valid():
-            user = request.user
-            user.set_password(self.request.data['new_password'])
-            user.save()
-            return Response({}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        user = request.user
+        user.set_password(self.request.data['new_password'])
+        user.save()
+        return Response({}, status=status.HTTP_201_CREATED)
 
     @action(methods=['GET'], detail=False,
             permission_classes=[IsAuthenticated])
@@ -221,15 +193,12 @@ class UserViewSet(viewsets.ModelViewSet):
                 data=request.data,
                 context={'request': request}
             )
-            if serializer.is_valid():
-                Follow.objects.create(
-                    follower=request.user, following=following
-                )
-                return Response(
-                    serializer.data, status=status.HTTP_201_CREATED
-                )
+            serializer.is_valid(raise_exception=True)
+            Follow.objects.create(
+                follower=request.user, following=following
+            )
             return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                serializer.data, status=status.HTTP_201_CREATED
             )
         get_object_or_404(
             Follow,

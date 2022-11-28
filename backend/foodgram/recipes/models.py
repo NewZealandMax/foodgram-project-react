@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
 
+
 User = get_user_model()
 
 
@@ -82,16 +83,26 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name='ingredient',
         verbose_name='Рецепт, в котором есть ингредиент'
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
+        related_name='recipe',
         verbose_name='Ингредиент для рецепта'
     )
     amount = models.PositiveIntegerField(
         verbose_name='Количество ингредиента'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique recipe'
+            )
+        ]
 
 
 class Cart(models.Model):
@@ -108,6 +119,14 @@ class Cart(models.Model):
         verbose_name='В корзине'
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique purchase'
+            )
+        ]
+
 
 class Favourite(models.Model):
     user = models.ForeignKey(
@@ -123,6 +142,14 @@ class Favourite(models.Model):
         verbose_name='В избранных'
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique favourite'
+            )
+        ]
+
 
 class Follow(models.Model):
     follower = models.ForeignKey(
@@ -137,3 +164,11 @@ class Follow(models.Model):
         related_name='followers',
         verbose_name='Автор'
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['follower', 'following'],
+                name='unique follow'
+            )
+        ]
