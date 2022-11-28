@@ -195,10 +195,13 @@ class RecipeSerializer(GetRecipeSerializer):
         return recipe
 
     def update(self, recipe, validated_data):
-        recipe.name = validated_data['name']
-        recipe.text = validated_data['text']
-        recipe.image = validated_data['image']
-        recipe.cooking_time = validated_data['cooking_time']
+        recipe.name = validated_data.get('name', recipe.name)
+        recipe.text = validated_data.get('text', recipe.text)
+        recipe.image = validated_data.get('image', recipe.image)
+        recipe.cooking_time = validated_data.get(
+            'cooking_time',
+            recipe.cooking_time
+        )
         recipe.tags.clear()
         tags = validated_data.get('tags')
         recipe.tags.set(

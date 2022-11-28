@@ -12,7 +12,7 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.NumberFilter(field_name='tags__id', lookup_expr='exact')
+    tags = filters.CharFilter(field_name='tags__slug', lookup_expr='exact')
     is_favorited = filters.NumberFilter(method='favourites')
     is_in_shopping_cart = filters.NumberFilter(method='cart')
 
