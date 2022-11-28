@@ -1,6 +1,9 @@
 from django_filters import rest_framework as filters
 
-from recipes.models import Ingredient, Recipe
+from recipes.models import Ingredient, Recipe, Tag
+
+
+CHOICES = [(obj.name, obj.slug) for obj in Tag.objects.all()]
 
 
 class IngredientFilter(filters.FilterSet):
@@ -12,7 +15,7 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.CharFilter(field_name='tags__slug', lookup_expr='exact')
+    tags = filters.MultipleChoiceFilter(field_name='tags__slug', choices=CHOICES)
     is_favorited = filters.NumberFilter(method='favourites')
     is_in_shopping_cart = filters.NumberFilter(method='cart')
 
