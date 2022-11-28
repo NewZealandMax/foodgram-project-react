@@ -21,14 +21,6 @@ services:
     env_file:
       - ./.env
 
-  #frontend:
-  #  container_name: foodgram_frontend
-  #  image: newzealand/frontend:latest
-  #  volumes:
-  #    - frontend/:/app/result_build/
-  #  depends_on:
-  #    - backend
-
   frontend:
     container_name: foodgram_frontend
     build:
