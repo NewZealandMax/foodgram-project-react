@@ -55,7 +55,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class GetRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для получения рецептов"""
-    author = UserSubscribedSerializer()
+    author = UserSubscribedSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
         many=True,
         read_only=True,
@@ -94,26 +94,36 @@ class GetRecipeSerializer(serializers.ModelSerializer):
             recipe=obj
         ).exists()
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(GetRecipeSerializer):
     """Сериализатор для создания и изменения рецептов"""
     ingredients = RecipeIngredientSerializer(
         many=True,
         source='ingredient'
     )
     image = Base64ImageField()
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
+    )
 
     class Meta:
         model = Recipe
         fields = (
             'id',
             'tags',
+            'author',
             'ingredients',
+            'is_favorited',
+            'is_in_shopping_cart',
             'name',
             'image',
             'text',
             'cooking_time',
         )
         read_only_fields = ('image',)
+
+    def to_representation(self, instance):
+        return super().to_representation(instance)
 
     def validate(self, data):
         tags = data['tags']
