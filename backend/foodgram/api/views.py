@@ -1,10 +1,10 @@
 import io
 
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
-
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
@@ -107,19 +107,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
         file.setFont('TimesNewRoman', 14)
         file.drawString(200, 800,
                         f'Список покупок пользователя {request.user.username}')
-        goods = dict()
-        for unit in request.user.cart.values('recipe_id__ingredient'):
-            obj = get_object_or_404(
-                RecipeIngredient,
-                pk = unit['recipe_id__ingredient']
-            )
-            name = obj.ingredient.name
-            goods[name] = goods.get(name, 0) + obj.amount
         left = 50
         bottom = 750
-        for good, amount in goods.items():
-            measure = get_object_or_404(Ingredient, name=good).measurement_unit
-            file.drawString(left, bottom, f'{good} ({measure}) - {amount}')
+        for unit in request.user.cart.values(
+            'recipe_id__ingredient__ingredient__name',
+            'recipe_id__ingredient__ingredient__measurement_unit',
+        ).annotate(Sum('recipe_id__ingredient__amount')):
+            name = unit['recipe_id__ingredient__ingredient__name']
+            measure = unit['recipe_id__ingredient__ingredient__measurement_unit']
+            amount = unit['recipe_id__ingredient__amount__sum']
+            file.drawString(left, bottom, f'{name} ({measure}) - {amount}')
             bottom -= 20
         file.showPage()
         file.save()

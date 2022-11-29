@@ -122,9 +122,6 @@ class RecipeSerializer(GetRecipeSerializer):
         )
         read_only_fields = ('image',)
 
-    def to_representation(self, instance):
-        return super().to_representation(instance)
-
     def validate(self, data):
         tags = data['tags']
         if not isinstance(tags, list):
@@ -178,38 +175,33 @@ class RecipeSerializer(GetRecipeSerializer):
             ]
         )
 
-    def create(self, validated_data):
-        recipe = Recipe.objects.create(
-            author=validated_data['author'],
-            name=validated_data['name'],
-            text=validated_data['text'],
-            image=validated_data['image'],
-            cooking_time=validated_data['cooking_time'],
-        )
+    def set_tags_ingredients(self, recipe, validated_data):
         tags = validated_data.get('tags')
         recipe.tags.set(
             Tag.objects.filter(pk__in=[tag.pk for tag in tags])
         )
         ingredients = validated_data.get('ingredient')
         self.add_ingredients(recipe, ingredients)
+
+    @staticmethod
+    def clean_data(validated_data):
+        return {
+            key: value for key, value in validated_data.items() if key not in (
+                'tags',
+                'ingredient'
+            )
+        }
+
+    def create(self, validated_data):
+        recipe = Recipe.objects.create(**self.clean_data(validated_data))
+        self.set_tags_ingredients(recipe, validated_data)
         return recipe
 
     def update(self, recipe, validated_data):
-        recipe.name = validated_data.get('name', recipe.name)
-        recipe.text = validated_data.get('text', recipe.text)
-        recipe.image = validated_data.get('image', recipe.image)
-        recipe.cooking_time = validated_data.get(
-            'cooking_time',
-            recipe.cooking_time
-        )
+        super().update(recipe, self.clean_data(validated_data))
         recipe.tags.clear()
-        tags = validated_data.get('tags')
-        recipe.tags.set(
-            Tag.objects.filter(pk__in=[tag.pk for tag in tags])
-        )
         recipe.ingredients.clear()
-        ingredients = validated_data.get('ingredient')
-        self.add_ingredients(recipe, ingredients)
+        self.set_tags_ingredients(recipe, validated_data)
         recipe.save()
         return recipe
 
