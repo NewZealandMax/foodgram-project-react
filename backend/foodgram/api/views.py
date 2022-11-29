@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import RecipePermission
 from recipes.models import (Cart, Favourite, Follow, Ingredient,
-                            Recipe, RecipeIngredient, Tag)
+                            Recipe, Tag)
 from recipes.serializers import (CartRecipeSerializer,
                                  FavouriteRecipeSerializer,
                                  FollowSerializer,
