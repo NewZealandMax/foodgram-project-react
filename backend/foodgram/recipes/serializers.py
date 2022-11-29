@@ -183,26 +183,22 @@ class RecipeSerializer(GetRecipeSerializer):
         ingredients = validated_data.get('ingredient')
         self.add_ingredients(recipe, ingredients)
 
-    @staticmethod
-    def clean_data(validated_data):
-        return {
-            key: value for key, value in validated_data.items() if key not in (
-                'tags',
-                'ingredient'
-            )
-        }
-
     def create(self, validated_data):
-        recipe = Recipe.objects.create(**self.clean_data(validated_data))
+        clean_data = dict(**validated_data)
+        del clean_data['tags']
+        del clean_data['ingredient']
+        recipe = Recipe.objects.create(**clean_data)
         self.set_tags_ingredients(recipe, validated_data)
         return recipe
 
     def update(self, recipe, validated_data):
-        super().update(recipe, self.clean_data(validated_data))
+        clean_data = dict(**validated_data)
+        del clean_data['tags']
+        del clean_data['ingredient']
+        super().update(recipe, clean_data)
         recipe.tags.clear()
         recipe.ingredients.clear()
         self.set_tags_ingredients(recipe, validated_data)
-        recipe.save()
         return recipe
 
 
