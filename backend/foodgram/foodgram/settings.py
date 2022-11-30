@@ -9,16 +9,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = False
 
-# ALLOWED_HOSTS = [
-#    '51.250.108.52',
-#    'backend:8000'
-#    'host.docker.internal',
-#    'localhost',
-# ]
-
-ALLOWED_HOSTS = ['*']    # Используется для тестов
+ALLOWED_HOSTS = [
+    '84.201.177.209',
+    'localhost:8000',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -66,24 +62,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
-#DATABASES = {
-#    'default': {
-#        'ENGINE': os.getenv('DB_ENGINE',
-#                            default='django.db.backends.postgresql'),
-#        'NAME': os.getenv('DB_NAME', default='postgres'),
-#        'USER': os.getenv('POSTGRES_USER', default='postgres'),
-#        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
-#        'HOST': os.getenv('DB_HOST', default='db'),
-#        'PORT': os.getenv('DB_PORT', default='5432'),
-#    }
-#}
-
-DATABASES = {                 # Используется для тестов
+DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': os.getenv('DB_ENGINE',
+                            default='django.db.backends.postgresql'),
+        'NAME': os.getenv('DB_NAME', default='postgres'),
+        'USER': os.getenv('POSTGRES_USER', default='postgres'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
+        'HOST': os.getenv('DB_HOST', default='db'),
+        'PORT': os.getenv('DB_PORT', default='5432'),
     }
 }
+
+#DATABASES = {                 # Используется для тестов
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#    }
+#}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
