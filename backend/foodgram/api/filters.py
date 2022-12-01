@@ -12,10 +12,7 @@ class IngredientFilter(filters.FilterSet):
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.MultipleChoiceFilter(
-        field_name='tags__slug',
-        choices=[(obj.name, obj.slug) for obj in Tag.objects.all()]
-    )
+    tags = filters.CharFilter(field_name='tags__slug', method='tags_filter')
     is_favorited = filters.NumberFilter(method='favourites')
     is_in_shopping_cart = filters.NumberFilter(method='cart')
 
@@ -34,3 +31,7 @@ class RecipeFilter(filters.FilterSet):
         if user.is_authenticated and value == 1:
             queryset = queryset.filter(consumers__user=user)
         return queryset
+
+    def tags_filter(self, queryset, name, value):
+        tags = self.request.query_params.getlist('tags') 
+        return queryset.filter(tags__slug__in=tags).distinct()
