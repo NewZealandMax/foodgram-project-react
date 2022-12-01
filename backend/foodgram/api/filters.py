@@ -3,11 +3,6 @@ from django_filters import rest_framework as filters
 from recipes.models import Ingredient, Recipe, Tag
 
 
-#CHOICES = [(obj.name, obj.slug) for obj in Tag.objects.all()]
-
-CHOICES = [('1', 'dinner'), ('2', 'supper')]
-
-
 class IngredientFilter(filters.FilterSet):
     name = filters.CharFilter(field_name='name', lookup_expr='istartswith')
 
@@ -19,7 +14,7 @@ class IngredientFilter(filters.FilterSet):
 class RecipeFilter(filters.FilterSet):
     tags = filters.MultipleChoiceFilter(
         field_name='tags__slug',
-        choices=CHOICES
+        choices=[(obj.name, obj.slug) for obj in Tag.objects.all()]
     )
     is_favorited = filters.NumberFilter(method='favourites')
     is_in_shopping_cart = filters.NumberFilter(method='cart')
