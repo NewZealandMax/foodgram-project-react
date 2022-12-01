@@ -14,7 +14,7 @@ class IngredientFilter(filters.FilterSet):
 class RecipeFilter(filters.FilterSet):
     tags = filters.MultipleChoiceFilter(
         field_name='tags__slug',
-        #choices=[(obj.name, obj.slug) for obj in Tag.objects.all()]
+        choices=[(obj.name, obj.slug) for obj in Tag.objects.all()]
     )
     is_favorited = filters.NumberFilter(method='favourites')
     is_in_shopping_cart = filters.NumberFilter(method='cart')
