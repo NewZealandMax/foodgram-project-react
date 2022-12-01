@@ -3,7 +3,9 @@ from django_filters import rest_framework as filters
 from recipes.models import Ingredient, Recipe, Tag
 
 
-CHOICES = [(obj.name, obj.slug) for obj in Tag.objects.all()]
+#CHOICES = [(obj.name, obj.slug) for obj in Tag.objects.all()]
+
+CHOICES = [('1', 'dinner'), ('2', 'supper')]
 
 
 class IngredientFilter(filters.FilterSet):
